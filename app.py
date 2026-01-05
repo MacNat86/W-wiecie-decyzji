@@ -1,137 +1,147 @@
 import streamlit as st
 import random
 
-# --- KONFIGURACJA STRONY ---
-st.set_page_config(page_title="Architekt Kariery - Symulator", page_icon="🎓", layout="centered")
+# --- KONFIGURACJA ---
+st.set_page_config(page_title="Projekt: Przyszłość", page_icon="⚖️")
 
-# --- INICJALIZACJA STANU GRY ---
+# --- STYLE ---
+st.markdown("""
+    <style>
+    .stProgress > div > div > div > div { background-color: #4CAF50; }
+    .reportview-container .main .block-container { max-width: 800px; }
+    </style>
+    """, unsafe_content_code=True)
+
+# --- INICJALIZACJA ---
 if 'etap' not in st.session_state:
     st.session_state.update({
         'etap': 'start',
         'plec': None,
-        'soft_skills': 0,
-        'hard_skills': 0,
-        'finanse': 1000,
-        'log': [],
-        'historia': ""
+        'punkty_wiedzy': 0,
+        'punkty_spoleczne': 0,
+        'zdrowie_psychiczne': 100,
+        'finanse': 300,
+        'doswiadczenie': 0,
+        'decyzje': []
     })
 
-def zmien_etap(nowy_etap):
+def przejdz_dalej(nowy_etap):
     st.session_state.etap = nowy_etap
     st.rerun()
 
-# --- PASEK BOCZNY ---
-st.sidebar.title("📊 Twój Profil")
-if st.session_state.plec:
-    st.sidebar.write(f"Postać: **{st.session_state.plec}**")
-st.sidebar.metric("Budżet", f"{st.session_state.finanse} PLN")
-st.sidebar.write(f"🤝 Miękkie: {st.session_state.soft_skills} | ⚙️ Twarde: {st.session_state.hard_skills}")
+# --- SIDEBAR (STATYSTYKI JAKO WYZWANIE) ---
+st.sidebar.title("📊 Twój Status")
+st.sidebar.metric("Konto", f"{st.session_state.finanse} PLN")
+st.sidebar.write(f"🧠 Wiedza: {st.session_state.punkty_wiedzy}")
+st.sidebar.write(f"🤝 Relacje: {st.session_state.punkty_spoleczne}")
+st.sidebar.write(f"🛠️ Doświadczenie: {st.session_state.doswiadczenie}")
+st.sidebar.progress(st.session_state.zdrowie_psychiczne, text=f"Kondycja psychiczna: {st.session_state.zdrowie_psychiczne}%")
 
-# --- LOGIKA GRY ---
+# --- LOGIKA ROZGRYWKI ---
 
-# 0. WYBÓR POSTACI
 if st.session_state.etap == 'start':
-    st.title("🚀 Architekt Kariery")
-    st.write("Witaj w symulatorze wyborów zawodowych. Twoja przyszłość zaczyna się dzisiaj!")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Chcę grać jako Uczeń"):
-            st.session_state.plec = "Uczeń"
-            zmien_etap('wybor_szkoly')
-    with col2:
-        if st.button("Chcę grać jako Uczennica"):
-            st.session_state.plec = "Uczennica"
-            zmien_etap('wybor_szkoly')
+    st.title("⚖️ Projekt: Przyszłość")
+    st.write("To nie jest zwykły quiz. Każda decyzja zamyka jedne drzwi, a otwiera inne. Masz przed sobą 5 lat kluczowych decyzji.")
+    c1, c2 = st.columns(2)
+    with c1: 
+        if st.button("Uczeń"): st.session_state.plec = "Uczeń"; przejdz_dalej('wybor_profilu')
+    with c2: 
+        if st.button("Uczennica"): st.session_state.plec = "Uczennica"; przejdz_dalej('wybor_profilu')
 
-# 1. WYBÓR ŚCIEŻKI EDUKACYJNEJ
-elif st.session_state.etap == 'wybor_szkoly':
-    st.header("📍 Wybór Ścieżki")
-    st.write(f"Jako **{st.session_state.plec}**, musisz zdecydować o swojej edukacji:")
+elif st.session_state.etap == 'wybor_profilu':
+    st.header("📍 Krok 1: Strategia Edukacyjna")
+    st.write("Szkoła to tylko baza. Musisz wybrać swój główny 'filar'. Gdzie zainwestujesz najwięcej czasu w 1. klasie?")
     
-    opcje = {
-        "Liceum (Studia i Teoria)": "liceum",
-        "Technikum (Zawód i Matura)": "technikum",
-        "Szkoła Branżowa (Szybki Fach)": "branzowa",
-        "Własna ścieżka (Pasja i Kursy)": "freelance"
-    }
-    
-    for tekst, klucz in opcje.items():
-        if st.button(tekst):
-            if klucz == "liceum": st.session_state.soft_skills += 3
-            if klucz == "technikum": st.session_state.hard_skills += 3
-            if klucz == "branzowa": st.session_state.finanse += 200; st.session_state.hard_skills += 5
-            zmien_etap(klucz)
-
-# 2. DETALE ŚCIEŻEK (Przykład dla Liceum)
-elif st.session_state.etap == 'liceum':
-    st.header("🎓 Ścieżka Akademicka")
-    st.write("W liceum skupiasz się na teorii. Pojawia się okazja zapisu do samorządu uczniowskiego.")
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("Wchodzę w to! (+Soft Skills)"):
-            st.session_state.soft_skills += 7
-            zmien_etap('wydarzenie_losowe')
+        st.subheader("Ścisły")
+        st.write("Ciężka nauka, mało czasu na życie towarzyskie.")
+        if st.button("Wybieram Ścisły"):
+            st.session_state.punkty_wiedzy += 15
+            st.session_state.zdrowie_psychiczne -= 10
+            st.session_state.decyzje.append("Profil ścisły")
+            przejdz_dalej('trudny_wybor')
     with col2:
-        if st.button("Wolę kółko fizyczne (+Hard Skills)"):
-            st.session_state.hard_skills += 7
-            zmien_etap('wydarzenie_losowe')
+        st.subheader("Human / Relacje")
+        st.write("Dużo projektów grupowych, średnie perspektywy finansowe na start.")
+        if st.button("Wybieram Human"):
+            st.session_state.punkty_spoleczne += 15
+            st.session_state.decyzje.append("Profil humanistyczny")
+            przejdz_dalej('trudny_wybor')
+    with col3:
+        st.subheader("Zawodowy / Tech")
+        st.write("Szybkie wejście w fach, ale ryzyko wypalenia fizycznego.")
+        if st.button("Wybieram Tech"):
+            st.session_state.doswiadczenie += 15
+            st.session_state.finanse += 100
+            st.session_state.decyzje.append("Profil techniczny")
+            przejdz_dalej('trudny_wybor')
 
-# 3. ŚCIEŻKA TECHNIKUM / BRANŻOWA
-elif st.session_state.etap in ['technikum', 'branzowa']:
-    st.header("🛠️ Ścieżka Praktyczna")
-    st.write("Dostajesz propozycję płatnych praktyk w wakacje.")
-    if st.button("Biorę praktyki (+400 PLN, +5 Hard Skills)"):
-        st.session_state.finanse += 400
-        st.session_state.hard_skills += 5
-        zmien_etap('wydarzenie_losowe')
-    if st.button("Odpoczywam (Nic nie zyskujesz)"):
-        zmien_etap('wydarzenie_losowe')
+elif st.session_state.etap == 'trudny_wybor':
+    st.header("⌛ Dylemat 2. Klasy: Czas to pieniądz")
+    st.write("Masz 20 'jednostek czasu'. Jak je rozdzielisz w tym roku?")
+    
+    nauka = st.slider("Czas na naukę i korepetycje", 0, 20, 10)
+    praca = st.slider("Czas na pracę dorywczą / staż", 0, 20 - nauka, 0)
+    zycie = 20 - nauka - praca
+    
+    st.write(f"Pozostały czas na regenerację i znajomych: **{zycie}**")
+    
+    if st.button("Zatwierdź podział"):
+        st.session_state.punkty_wiedzy += nauka * 2
+        st.session_state.finanse += praca * 50
+        st.session_state.punkty_spoleczne += zycie
+        if zycie < 4:
+            st.session_state.zdrowie_psychiczne -= 20
+            st.warning("Jesteś skrajnie zmęczony! Twoja kondycja psychiczna drastycznie spadła.")
+        przejdz_dalej('kryzys')
 
-# 4. ŚCIEŻKA FREELANCE
-elif st.session_state.etap == 'freelance':
-    st.header("🎨 Pasja i Samodzielność")
-    st.write("Zamiast szkoły, stawiasz na kursy online i budowanie portfolio.")
-    wybor = st.slider("Ile czasu poświęcasz na naukę codziennie?", 0, 12, 4)
-    if st.button("Zatwierdź"):
-        st.session_state.hard_skills += wybor
-        st.session_state.finanse -= (wybor * 10)
-        zmien_etap('wydarzenie_losowe')
-
-# 5. WYDARZENIE LOSOWE (Dla wszystkich)
-elif st.session_state.etap == 'wydarzenie_losowe':
-    st.header("🎲 Karta Losu")
+elif st.session_state.etap == 'kryzys':
+    st.header("⚡ Kryzys: Nieoczekiwane zdarzenie")
     zdarzenie = random.choice([
-        ("Wygrałeś grant edukacyjny!", 0, 0, 500),
-        ("Twój projekt na YouTube stał się hitem!", 5, 2, 100),
-        ("Zepsuł Ci się komputer...", 0, 0, -400),
-        ("Brałeś udział w debacie oksfordzkiej.", 6, 0, 0)
+        "Masz okazję wyjechać na prestiżową wymianę, ale kosztuje ona 1000 PLN. Pożyczasz czy rezygnujesz?",
+        "Twoja pasja zaczyna przynosić dochody, ale zawalasz oceny. Co wybierasz?",
+        "Wypalenie. Musisz wydać 300 PLN na terapię/odpoczynek lub stracisz punkty wiedzy."
     ])
-    st.info(zdarzenie[0])
-    st.session_state.soft_skills += zdarzenie[1]
-    st.session_state.hard_skills += zdarzenie[2]
-    st.session_state.finanse += zdarzenie[3]
+    st.subheader(zdarzenie)
     
-    if st.button("Idź do finału"):
-        zmien_etap('final')
-
-# 6. FINAŁ I GENERATOR ZAWODÓW
-elif st.session_state.etap == 'final':
-    st.header("🏁 Twoja Przyszłość")
-    s = st.session_state.soft_skills
-    h = st.session_state.hard_skills
-    f = st.session_state.finanse
-
-    # Rozbudowana logika zawodów
-    if s > 15 and h > 15: wynik = "Dyrektor Innowacji"
-    elif h > 20: wynik = "Główny Inżynier / Programista"
-    elif s > 20: wynik = "Specjalista PR / Dyplomata"
-    elif f > 1500: wynik = "Inwestor / Właściciel Firmy"
-    elif h > 10 and s > 10: wynik = "Analityk Biznesowy"
-    else: wynik = "Wszechstronny Specjalista (Junior)"
-
-    st.success(f"Twój zawód: **{wynik}**")
-    st.write(f"Osiągnięcia: Miękkie ({s}), Twarde ({h}), Budżet ({f} PLN)")
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Inwestuję w przyszłość / Pasję"):
+            if st.session_state.finanse >= 300:
+                st.session_state.finanse -= 300
+                st.session_state.doswiadczenie += 20
+            else:
+                st.error("Nie stać Cię na to! Musisz wybrać drugą opcję.")
+    with c2:
+        if st.button("Skupiam się na stabilizacji / Szkole"):
+            st.session_state.punkty_wiedzy += 10
+            st.session_state.zdrowie_psychiczne += 5
     
-    if st.button("Zacznij od nowa"):
+    if st.button("Idź do podsumowania kariery"):
+        przejdz_dalej('rynek_pracy')
+
+elif st.session_state.etap == 'rynek_pracy':
+    st.header("🌍 Rynek Pracy: 5 lat później")
+    st.write("Analizujemy Twój profil...")
+    
+    w = st.session_state.punkty_wiedzy
+    s = st.session_state.punkty_spoleczne
+    d = st.session_state.doswiadczenie
+    p = st.session_state.zdrowie_psychiczne
+    
+    if p < 30:
+        st.error("🚨 Zakończenie: Wypalenie zawodowe. Masz wiedzę, ale nie masz siły jej użyć. Nauczka: Pamiętaj o odpoczynku!")
+    elif w > 40 and s > 30:
+        st.success("💎 Zakończenie: Manager / Lider Zespołu. Świetny balans!")
+    elif w > 50:
+        st.success("🔬 Zakończenie: Ekspert / Naukowiec. Twoja wiedza jest Twoją walutą.")
+    elif d > 40:
+        st.success("🏗️ Zakończenie: Wysokiej klasy Specjalista. Praktyka czyni mistrza.")
+    else:
+        st.warning("⚠️ Zakończenie: Praca poniżej kwalifikacji. Zabrakło Ci konkretnego kierunku.")
+        
+    st.write("Podjęte przez Ciebie decyzje:", ", ".join(st.session_state.decyzje))
+    if st.button("Spróbuj innej strategii (Restart)"):
         st.session_state.clear()
         st.rerun()
